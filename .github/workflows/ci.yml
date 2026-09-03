@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install web UI and frozen runtime snapshot
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-web.txt
+          python -m pip install --no-deps -r requirements.txt
+          python -m pip install --no-deps -e .
+          python -m pip install -r requirements-dev.txt
+      - name: Lint and format check
+        run: |
+          python -m ruff check src tests
+          python -m ruff format --check src tests
+      - name: Test
+        run: python -m pytest
+      - name: Deterministic offline evaluation
+        run: python -m travel_agent_orchestrator.evaluation
+      - name: Basic secret scan
+        shell: pwsh
+        run: |
+          $matches = Get-ChildItem src,tests,docs,scripts -Recurse -File |
+            Select-String -Pattern 'sk-[A-Za-z0-9_-]{20,}'
+          if ($matches) { throw "Potential hard-coded API key detected." }

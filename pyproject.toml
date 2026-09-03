@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "travel-agent-orchestrator"
+version = "2.0.0"
+description = "A traceable hotel Multi-Agent platform with sandbox transactions and human approval."
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+license = { text = "MIT" }
+authors = [{ name = "travel-agent-orchestrator contributors" }]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.scripts]
+travel-agent-api = "travel_agent_orchestrator.api.__main__:main"
+travel-agent-web = "travel_agent_orchestrator.api.__main__:main"
+travel-agent-init-db = "travel_agent_orchestrator.infrastructure.database:main"
+travel-agent-evaluate = "travel_agent_orchestrator.evaluation.__main__:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+markers = ["integration: requires running PostgreSQL and Redis services"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+ignore = ["B008"]
+
+[tool.ruff.format]
+quote-style = "double"
