@@ -2,7 +2,6 @@
 
 一个面向酒店搜索、沙箱预订和售后服务的可追踪 Multi-Agent 平台。系统不是把一条流水线机械地拆成多个 Agent，而是按工具权限、Prompt、上下文和业务责任划分 `Supervisor`、`Discovery`、`Booking` 与 `Customer Service` 四个推理角色，并将支付实现为确定性的补偿 Saga。
 
-> **English summary:** A traceable hotel Multi-Agent platform built with LangGraph, FastAPI, Celery, Redis, PostgreSQL and Gradio. It combines role-scoped tools, structured handoffs, human approval, deterministic sandbox transactions, compensation, persistent context and offline evaluation.
 
 > [!IMPORTANT]
 > 所有报价、预订、支付、退款和投诉都是可重复的沙箱业务，不会创建真实酒店订单，也不会收集银行卡或真实支付信息。高德 MCP 只提供地点数据，不代表酒店库存可真实预订。
@@ -56,7 +55,7 @@ flowchart LR
 | Customer Service Agent | 查单、改期、取消、退款、投诉 | 当前用户所属订单与售后状态 | 本人订单、售后写工具、结构化交接 |
 | Payment Service | 支付、幂等和失败补偿 | 已校验报价、订单、支付状态 | 确定性领域服务，不是自由决策 Agent |
 
-完整设计与面试材料见 [Multi-Agent 改造说明](docs/MULTI_AGENT_REFACTORING.md)，模块及时序图见 [架构文档](docs/architecture.md)。
+完整设计见 [Multi-Agent 改造说明](docs/MULTI_AGENT_REFACTORING.md)，模块及时序图见 [架构文档](docs/architecture.md)。
 
 ## 酒店沙箱
 
@@ -73,7 +72,7 @@ PAYMENT_PENDING → PAYMENT_FAILED
 
 ## 快速开始
 
-默认按本地 Windows 服务运行，不要求 Docker。环境要求：Windows 10/11、Python 3.11、本地 PostgreSQL、本地 Redis，以及至少一个模型提供商的 API Key。高德 MCP 与 LangSmith 均为可选项。
+默认按本地 Windows 服务运行。环境要求：Windows 10/11、Python 3.11、本地 PostgreSQL、本地 Redis，以及至少一个模型提供商的 API Key。高德 MCP 与 LangSmith 均为可选项。
 
 ### 1. 安装 Python 依赖
 
@@ -206,7 +205,7 @@ docker compose up -d
 2. 售后写操作：先完成沙箱订单，再输入“把这个订单改到下周”，观察 Customer Service 先查单、再申请写操作审批并执行受控状态转换。
 3. 补偿事务：设置 `SANDBOX_PAYMENT_MODE=fail_after_capture`，批准预订，观察支付捕获后自动退款、订单进入 `REFUNDED`，轨迹记录补偿结果。
 
-更完整的逐步操作与预期轨迹见 [Multi-Agent 改造说明](docs/MULTI_AGENT_REFACTORING.md#面试演示脚本)。
+更完整的逐步操作与演示见 [思路记录](https://blog.mirastar.top/2026/08/31/travel-agent-orchestrator-engineering-notes-with-demo/)。
 
 ## API
 
@@ -262,19 +261,10 @@ travel-agent-orchestrator/
 └─ pyproject.toml
 ```
 
-## 依赖快照说明
 
-项目保留原工程的冻结运行清单。该快照中 `langchain==0.3.25` 声明 `langchain-core<1.0`，而 `langchain-mcp-adapters==0.3.0` 声明 `langchain-core>=1.0`，因此安装脚本先安装 Gradio 依赖，再用 `--no-deps` 恢复已经验证过的完整运行快照。本项目不宣称 `pip check` 无警告，也没有在重构中擅自升级这组依赖。
-
-## 已知限制
+## 已有限制
 
 - 仅覆盖酒店搜索、推荐、报价、沙箱预订与售后，不覆盖机票、火车票和真实支付。
-- 本地 `user_id` 没有生产级认证、授权、限流和审计签名；上线前必须由可信身份系统注入。
 - checkpoint 保留完整原始消息以便审计，摘要只压缩模型输入，数据库仍会随长会话增长。
 - 高德地点与沙箱库存是两个数据域；页面会显示来源标签，不能把地点结果宣传为真实可订库存。
 
-## GitHub 上传规则
-
-上传新目录中未被 `.gitignore` 排除的全部内容，包括源码、测试、文档、脚本、工作流、预览图、`README.md`、`LICENSE`、`pyproject.toml`、requirements 文件、`compose.yaml`、`.gitignore` 和 `.env.example`。
-
-严禁上传 `.env`、API Key、虚拟环境、`__pycache__`、`.pytest_cache`、`.ruff_cache`、日志、覆盖率文件、`var/` 运行数据、IDE 配置、Docker 数据卷或本地数据库文件。详见 [发布说明](docs/publishing.md)。
